@@ -1,0 +1,577 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.task-list, .calendar {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.task {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin: 5px 0;
+    background: #f8f8f8;
+    border-radius: 4px;
+    cursor: grab;
+    user-select: none;
+}
+
+.task:active {
+    cursor: grabbing;
+}
+
+.task.dragging {
+    opacity: 0.5;
+}
+
+.add-task-form {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.add-task-form input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar {
+    position: relative;
+    overflow-x: auto;
+}
+
+.schedule-grid {
+    display: grid;
+    grid-template-columns: 60px repeat(7, minmax(120px, 1fr));
+    grid-auto-rows: 60px;
+    gap: 1px;
+    background: #ddd;
+    position: relative;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Time column */
+.time-label {
+    background: #f8f8f8;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Header row */
+.schedule-grid > .time-label:nth-child(-n+8) {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f8f8f8;
+}
+
+/* Time column */
+.schedule-grid > .time-label:nth-child(8n+1) {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #f8f8f8;
+}
+
+/* Top-left corner */
+.schedule-grid > .time-label:first-child {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    background: #f8f8f8;
+}
+
+.schedule-slot {
+    background: white;
+    padding: 5px;
+    border: 1px solid #eee;
+    position: relative;
+    min-height: 60px;
+}
+
+.schedule-slot.has-task {
+    background: #e3f2fd;
+}
+
+.task-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+}
+
+.scheduled-task {
+    background: #007bff;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    cursor: pointer;
+}
+
+.remove-task {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.remove-task:hover {
+    background: rgba(255,255,255,0.5);
+}
+
+/* Onboarding Styles */
+.onboarding-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.onboarding-step {
+    text-align: center;
+    padding: 20px;
+}
+
+.preference-form {
+    max-width: 400px;
+    margin: 20px auto;
+}
+
+.form-group {
+    margin: 15px 0;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.canvas-button {
+    background: #e41e3f;
+    margin: 10px 0;
+}
+
+.skip-button {
+    background: #6c757d;
+}
+
+/* Class Schedule Styles */
+.time-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.class-list {
+    margin: 20px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.class-form {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.class-item {
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.class-info h4 {
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.class-info p {
+    margin: 3px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.class-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.edit-btn {
+    background: #28a745;
+}
+
+.delete-btn {
+    background: #dc3545;
+}
+
+.class-edit-form, .activity-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #eee;
+    cursor: move;
+}
+
+.activity-item.dragging {
+    opacity: 0.5;
+}
+
+.activity-item.drop-before {
+    border-top: 2px solid #2196F3;
+}
+
+.activity-item.drop-after {
+    border-bottom: 2px solid #2196F3;
+}
+
+.drag-handle {
+    color: #999;
+    margin-right: 8px;
+    cursor: move;
+    user-select: none;
+}
+
+.activity-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.activity-item.dragging .activity-actions {
+    visibility: hidden;
+}
+
+.activity-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.activity-actions button {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.duration {
+    color: #666;
+    font-size: 14px;
+}
+
+.custom-activities {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+}
+
+.import-options {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.import-button {
+    width: 100%;
+    background: #28a745;
+}
+
+/* Meal Times */
+.meal-times {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.meal-times div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Multiple Select */
+select[multiple] {
+    height: auto;
+    min-height: 100px;
+    padding: 5px;
+}
+
+.header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+}
+
+.logout-button {
+    background: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.logout-button:hover {
+    background: #c82333;
+}
+
+.routine-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.routines-container {
+    margin-top: 20px;
+    display: grid;
+    gap: 20px;
+}
+
+.routine-section {
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.routine-activities {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 15px;
+    background: #f8f8f8;
+    border-radius: 4px;
+}
+
+.routine-activities label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: normal;
+}
+
+.routine-activities input[type="checkbox"] {
+    width: auto;
+}
+
+.routine-activities input[type="text"] {
+    grid-column: 1 / -1;
+}
+
+.routine-activities button {
+    grid-column: 1 / -1;
+    background: #28a745;
+}
+
+.edit-class-days {
+    height: 120px !important;
+    margin: 10px 0;
+}
+
+.class-edit-form {
+    background: white;
+    padding: 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.edit-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 15px;
+}
+
+.day-select {
+    margin: 10px 0;
+}
+
+.day-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.day-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.day-checkboxes input[type="checkbox"] {
+    width: auto;
+}
+
+.work-time-select {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.work-time-select label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.work-time-select input[type="checkbox"] {
+    width: auto;
+}
+
+.custom-activity-input {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.custom-activity-input input {
+    flex: 1;
+    padding: 6px 12px;
+}
+
+.custom-activity-input button {
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+.predefined-activities {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.block-details-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.routine-activities-list {
+    margin-top: 15px;
+}
+
+.routine-activity-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.routine-activity-item:last-child {
+    border-bottom: none;
+}
+
+.modal-content button {
+    margin-top: 15px;
+    width: 100%;
+} 

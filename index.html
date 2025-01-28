@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Planner - Welcome</title>
+    <!-- FullCalendar CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Onboarding Wizard -->
+    <div id="onboarding-wizard" class="onboarding-container">
+        <div class="onboarding-steps">
+            <!-- Step 1: Welcome -->
+            <div class="onboarding-step" data-step="1">
+                <h1>Welcome to Workflow Planner</h1>
+                <p>Let's set up your perfect schedule in just a few steps.</p>
+                <button onclick="nextStep(1)">Get Started</button>
+            </div>
+
+            <!-- Step 2: Daily Schedule -->
+            <div class="onboarding-step" data-step="2" style="display: none;">
+                <h2>Set Your Daily Schedule</h2>
+                <div class="preference-form">
+                    <div class="form-group">
+                        <label>Wake-up Time:</label>
+                        <input type="time" id="wakeTime" value="07:00">
+                    </div>
+                    <div class="form-group">
+                        <label>Bedtime:</label>
+                        <input type="time" id="bedTime" value="23:00">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="prevStep(2)">Back</button>
+                    <button onclick="nextStep(2)">Continue</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Work Preferences -->
+            <div class="onboarding-step" data-step="3" style="display: none;">
+                <h2>Work Preferences</h2>
+                <div class="preference-form">
+                    <div class="form-group">
+                        <label>When do you prefer to work?</label>
+                        <div class="work-time-select">
+                            <label><input type="checkbox" value="morning"> Morning (8AM - 12PM)</label>
+                            <label><input type="checkbox" value="afternoon"> Afternoon (12PM - 5PM)</label>
+                            <label><input type="checkbox" value="evening"> Evening (5PM - 10PM)</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Minimum Free Time (hours per day)</label>
+                        <input type="number" id="minFreeTime" min="1" max="8" value="2" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Break Preferences</label>
+                        <select id="breakFrequency">
+                            <option value="60">Every 1 hour</option>
+                            <option value="90">Every 1.5 hours</option>
+                            <option value="120">Every 2 hours</option>
+                        </select>
+                        <select id="breakDuration">
+                            <option value="5">5 minute breaks</option>
+                            <option value="10">10 minute breaks</option>
+                            <option value="15">15 minute breaks</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="prevStep(3)">Back</button>
+                    <button onclick="nextStep(3)">Continue</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Class Schedule -->
+            <div class="onboarding-step" data-step="4" style="display: none;">
+                <h2>Class Schedule</h2>
+                <div class="preference-form">
+                    <!-- Manual Class Entry -->
+                    <div class="form-group">
+                        <label>Class Schedule</label>
+                        <div id="classList" class="class-list">
+                            <!-- Classes will be rendered here -->
+                        </div>
+                        <div class="class-form">
+                            <input type="text" id="className" placeholder="Class Name">
+                            <div class="day-select">
+                                <label>Select Days:</label>
+                                <div class="day-checkboxes">
+                                    <label><input type="checkbox" value="1"> Monday</label>
+                                    <label><input type="checkbox" value="2"> Tuesday</label>
+                                    <label><input type="checkbox" value="3"> Wednesday</label>
+                                    <label><input type="checkbox" value="4"> Thursday</label>
+                                    <label><input type="checkbox" value="5"> Friday</label>
+                                </div>
+                            </div>
+                            <div class="time-group">
+                                <input type="time" id="classStartTime">
+                                <span>to</span>
+                                <input type="time" id="classEndTime">
+                            </div>
+                            <button onclick="addClass()">Add Class</button>
+                        </div>
+                    </div>
+
+                    <!-- Import Options -->
+                    <div class="import-options">
+                        <button onclick="importFromFile()" class="import-button">
+                            Import from Calendar File (.ics)
+                        </button>
+                        <input type="file" id="calendarFile" accept=".ics" style="display: none">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="prevStep(4)">Back</button>
+                    <button onclick="nextStep(4)">Continue</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Set Blocked Times -->
+            <div class="onboarding-step" data-step="5" style="display: none;">
+                <h2>Set Blocked Times</h2>
+                <div class="preference-form">
+                    <!-- Sleep Schedule -->
+                    <div class="form-group">
+                        <label>Sleep Schedule & Routines</label>
+                        <div class="time-group">
+                            <div class="routine-block">
+                                <label>Evening Routine Start</label>
+                                <input type="time" id="eveningRoutineStart" value="21:00">
+                            </div>
+                            <div class="routine-block">
+                                <label>Morning Routine End</label>
+                                <input type="time" id="morningRoutineEnd" value="08:00">
+                            </div>
+                        </div>
+                        
+                        <!-- Routine Activities -->
+                        <div class="routines-container">
+                            <div class="routine-section">
+                                <label>Evening Routine Activities</label>
+                                <div class="routine-activities">
+                                    <div class="predefined-activities">
+                                        <!-- These will be rendered by JavaScript -->
+                                    </div>
+                                    <div class="custom-activity-input">
+                                        <input type="text" id="customEveningActivity" placeholder="Add custom activity">
+                                        <button onclick="addCustomActivity('evening')">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="routine-section">
+                                <label>Morning Routine Activities</label>
+                                <div class="routine-activities">
+                                    <div class="predefined-activities">
+                                        <!-- These will be rendered by JavaScript -->
+                                    </div>
+                                    <div class="custom-activity-input">
+                                        <input type="text" id="customMorningActivity" placeholder="Add custom activity">
+                                        <button onclick="addCustomActivity('morning')">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Meal Times -->
+                    <div class="form-group">
+                        <label>Meal Times</label>
+                        <div class="meal-times">
+                            <div>
+                                <label>Breakfast</label>
+                                <input type="time" id="breakfastTime" value="08:00">
+                            </div>
+                            <div>
+                                <label>Lunch</label>
+                                <input type="time" id="lunchTime" value="12:00">
+                            </div>
+                            <div>
+                                <label>Dinner</label>
+                                <input type="time" id="dinnerTime" value="18:00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="prevStep(5)">Back</button>
+                    <button onclick="nextStep(5)">Continue</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Regular Activities -->
+            <div class="onboarding-step" data-step="6" style="display: none;">
+                <h2>Add Regular Activities</h2>
+                <p>Add your recurring activities like work, hobbies, exercise, and free time blocks.</p>
+                <div class="preference-form">
+                    <div class="form-group">
+                        <label>Regular Activities</label>
+                        <div id="regularBlocksList" class="class-list">
+                            <!-- Regular blocks will be rendered here -->
+                        </div>
+                        <div class="class-form">
+                            <input type="text" id="blockName" placeholder="Activity Name (e.g., Work, Gym, Piano)">
+                            <div class="day-select">
+                                <label>Select Days:</label>
+                                <div class="day-checkboxes">
+                                    <label><input type="checkbox" value="1"> Monday</label>
+                                    <label><input type="checkbox" value="2"> Tuesday</label>
+                                    <label><input type="checkbox" value="3"> Wednesday</label>
+                                    <label><input type="checkbox" value="4"> Thursday</label>
+                                    <label><input type="checkbox" value="5"> Friday</label>
+                                    <label><input type="checkbox" value="6"> Saturday</label>
+                                    <label><input type="checkbox" value="0"> Sunday</label>
+                                </div>
+                            </div>
+                            <div class="time-group">
+                                <input type="time" id="blockStartTime">
+                                <span>to</span>
+                                <input type="time" id="blockEndTime">
+                            </div>
+                            <div class="block-type">
+                                <label>Activity Type:</label>
+                                <select id="blockType">
+                                    <option value="work" style="color: #4CAF50">Work/Internship</option>
+                                    <option value="exercise" style="color: #FF9800">Exercise/Sports</option>
+                                    <option value="hobby" style="color: #9C27B0">Hobbies</option>
+                                    <option value="free" style="color: #2196F3">Free Time</option>
+                                    <option value="important" style="color: #F44336">Important</option>
+                                </select>
+                            </div>
+                            <button onclick="addRegularBlock()">Add Activity</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="prevStep(6)">Back</button>
+                    <button onclick="nextStep(6)">Continue</button>
+                </div>
+            </div>
+
+            <!-- Step 7: Canvas Integration -->
+            <div class="onboarding-step" data-step="7" style="display: none;">
+                <h2>Connect Your Canvas Account</h2>
+                <p>Connect to automatically import your assignments and deadlines.</p>
+                <button onclick="connectCanvas()" class="canvas-button">
+                    Connect Canvas
+                </button>
+                <button onclick="skipCanvas()" class="skip-button">
+                    Skip for now
+                </button>
+                <div class="button-group">
+                    <button onclick="prevStep(7)">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App (initially hidden) -->
+    <div id="main-app" style="display: none;">
+        <div class="header">
+            <button onclick="logout()" class="logout-button">Logout</button>
+        </div>
+        <div class="container">
+            <!-- Task List Section -->
+            <div class="task-list">
+                <h2>Tasks</h2>
+                <div id="tasks"></div>
+                <div class="add-task-form">
+                    <input type="text" id="taskName" placeholder="Task name">
+                    <input type="number" id="taskDuration" placeholder="Duration (min)" min="5" step="5" value="30">
+                    <button onclick="addNewTask()">Add Task</button>
+                </div>
+            </div>
+
+            <!-- Calendar Section -->
+            <div class="calendar">
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FullCalendar Scripts -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src="app.js"></script>
+</body>
+</html> 

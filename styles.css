@@ -376,6 +376,17 @@ button:hover {
     gap: 5px;
 }
 
+.meal-times input[type="number"] {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.meal-times input[type="time"] {
+    margin-bottom: 5px;
+}
+
 /* Multiple Select */
 select[multiple] {
     height: auto;

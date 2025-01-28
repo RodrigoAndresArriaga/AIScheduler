@@ -29,7 +29,12 @@ let userPreferences = {
     meals: {
         breakfast: '08:00',
         lunch: '12:00',
-        dinner: '18:00'
+        dinner: '18:00',
+        durations: {
+            breakfast: 30,
+            lunch: 30,
+            dinner: 30
+        }
     },
     breaks: {
         frequency: 60,
@@ -291,25 +296,25 @@ function removeTask(taskId) {
 }
 
 function nextStep(currentStep) {
-    if (currentStep === 3) {
-        // Save work preferences
-        userPreferences.preferredHours = Array.from(document.querySelectorAll('.work-time-select input[type="checkbox"]:checked'))
-            .map(cb => cb.value);
-        userPreferences.minFreeTime = parseFloat(document.getElementById('minFreeTime').value);
-        userPreferences.breaks = {
-            frequency: parseInt(document.getElementById('breakFrequency').value),
-            duration: parseInt(document.getElementById('breakDuration').value)
-        };
-    } else if (currentStep === 5) {
+    if (currentStep === 5) {
         // Save sleep schedule and meal preferences
         userPreferences.sleepSchedule = {
             ...userPreferences.sleepSchedule,
             eveningRoutineStart: document.getElementById('eveningRoutineStart').value,
             morningRoutineEnd: document.getElementById('morningRoutineEnd').value
         };
-        userPreferences.meals.breakfast = document.getElementById('breakfastTime').value;
-        userPreferences.meals.lunch = document.getElementById('lunchTime').value;
-        userPreferences.meals.dinner = document.getElementById('dinnerTime').value;
+
+        // Get meal times and durations
+        userPreferences.meals = {
+            breakfast: document.getElementById('breakfastTime').value,
+            lunch: document.getElementById('lunchTime').value,
+            dinner: document.getElementById('dinnerTime').value,
+            durations: {
+                breakfast: parseInt(document.getElementById('breakfastDuration').value) || 30,
+                lunch: parseInt(document.getElementById('lunchDuration').value) || 30,
+                dinner: parseInt(document.getElementById('dinnerDuration').value) || 30
+            }
+        };
 
         // Check for overlaps
         const overlaps = checkScheduleOverlaps();
@@ -322,6 +327,20 @@ function nextStep(currentStep) {
                 return;
             }
         }
+
+        // Hide current step and show next step
+        document.querySelector('[data-step="5"]').style.display = 'none';
+        document.querySelector('[data-step="6"]').style.display = 'block';
+        return;
+    } else if (currentStep === 3) {
+        // Save work preferences
+        userPreferences.preferredHours = Array.from(document.querySelectorAll('.work-time-select input[type="checkbox"]:checked'))
+            .map(cb => cb.value);
+        userPreferences.minFreeTime = parseFloat(document.getElementById('minFreeTime').value);
+        userPreferences.breaks = {
+            frequency: parseInt(document.getElementById('breakFrequency').value),
+            duration: parseInt(document.getElementById('breakDuration').value)
+        };
     } else if (currentStep === 6) {
         // Check for overlaps before proceeding
         const overlaps = checkScheduleOverlaps();
@@ -697,13 +716,14 @@ function initializeApp() {
         userPreferences.sleepSchedule.eveningRoutine
     );
 
-    // Add meal times
+    // Add meal times with custom durations
     ['breakfast', 'lunch', 'dinner'].forEach(meal => {
         const mealTime = userPreferences.meals[meal];
+        const duration = userPreferences.meals.durations[meal];
         calendar.addEvent({
             title: `${meal.charAt(0).toUpperCase() + meal.slice(1)}`,
             startTime: mealTime,
-            endTime: addMinutes(mealTime, 30),
+            endTime: addMinutes(mealTime, duration),
             daysOfWeek: [1,2,3,4,5],
             backgroundColor: '#FF9800',
             borderColor: '#FF9800',
@@ -742,9 +762,10 @@ function showBlockDetails(event) {
             </div>
         `;
     } else if (type === 'meal') {
+        const mealType = event.title.toLowerCase();
         content = `
             <h3>${event.title}</h3>
-            <p>Duration: 30 minutes</p>
+            <p>Duration: ${userPreferences.meals.durations[mealType]} minutes</p>
         `;
     } else {
         content = `
@@ -806,7 +827,12 @@ function logout() {
         meals: {
             breakfast: '08:00',
             lunch: '12:00',
-            dinner: '18:00'
+            dinner: '18:00',
+            durations: {
+                breakfast: 30,
+                lunch: 30,
+                dinner: 30
+            }
         },
         breaks: {
             frequency: 60,
@@ -1258,18 +1284,18 @@ function findAvailableTimeSlots() {
                     start: block.startTime,
                     end: block.endTime
                 })),
-            // Meals
+            // Meals with custom durations
             {
                 start: userPreferences.meals.breakfast,
-                end: addMinutes(userPreferences.meals.breakfast, 30)
+                end: addMinutes(userPreferences.meals.breakfast, userPreferences.meals.durations.breakfast)
             },
             {
                 start: userPreferences.meals.lunch,
-                end: addMinutes(userPreferences.meals.lunch, 30)
+                end: addMinutes(userPreferences.meals.lunch, userPreferences.meals.durations.lunch)
             },
             {
                 start: userPreferences.meals.dinner,
-                end: addMinutes(userPreferences.meals.dinner, 30)
+                end: addMinutes(userPreferences.meals.dinner, userPreferences.meals.durations.dinner)
             },
             // Routines
             {
@@ -1288,13 +1314,18 @@ function findAvailableTimeSlots() {
 
         fixedBlocks.forEach(block => {
             if (currentTime < block.start) {
-                const period = getTimePeriod(currentTime);
-                if (period) {
-                    availableSlots[period].push({
-                        day,
-                        startTime: currentTime,
-                        endTime: block.start
-                    });
+                const duration = getTimeDuration(currentTime, block.start);
+                // Only add slots that are at least 15 minutes long
+                if (duration >= 0.25) { // 15 minutes = 0.25 hours
+                    const period = getTimePeriod(currentTime);
+                    if (period) {
+                        availableSlots[period].push({
+                            day,
+                            startTime: currentTime,
+                            endTime: block.start,
+                            duration: duration
+                        });
+                    }
                 }
             }
             currentTime = block.end;
@@ -1302,13 +1333,17 @@ function findAvailableTimeSlots() {
 
         // Add final slot if there's time after last block
         if (currentTime < endTime) {
-            const period = getTimePeriod(currentTime);
-            if (period) {
-                availableSlots[period].push({
-                    day,
-                    startTime: currentTime,
-                    endTime: endTime
-                });
+            const duration = getTimeDuration(currentTime, endTime);
+            if (duration >= 0.25) {
+                const period = getTimePeriod(currentTime);
+                if (period) {
+                    availableSlots[period].push({
+                        day,
+                        startTime: currentTime,
+                        endTime: endTime,
+                        duration: duration
+                    });
+                }
             }
         }
     });
@@ -1334,42 +1369,39 @@ function scheduleStudyAndFreeTime() {
     console.log('Available slots:', availableSlots);
     console.log('Preferred hours:', preferredHours);
 
-    // Helper function to check if a slot overlaps with any fixed activities
-    function hasOverlap(slot) {
-        // Check classes
-        const classOverlap = userPreferences.classes.some(cls => 
-            cls.day === slot.day && 
-            checkTimeOverlap(slot.startTime, slot.endTime, cls.startTime, cls.endTime)
-        );
-        if (classOverlap) return true;
+    // First, try to use small gaps (15-30 minutes) near meal times as free time
+    Object.keys(availableSlots).forEach(timeOfDay => {
+        availableSlots[timeOfDay].forEach(slot => {
+            // Check if this is a small gap (15-30 minutes) near a meal
+            const isNearMeal = ['breakfast', 'lunch', 'dinner'].some(meal => {
+                const mealTime = userPreferences.meals[meal];
+                const mealEnd = addMinutes(mealTime, userPreferences.meals.durations[meal]);
+                return (
+                    (Math.abs(getTimeDuration(slot.startTime, mealTime)) <= 0.5) || // Within 30 min before meal
+                    (Math.abs(getTimeDuration(mealEnd, slot.endTime)) <= 0.5)       // Within 30 min after meal
+                );
+            });
 
-        // Check meals
-        const mealTimes = [
-            { start: userPreferences.meals.breakfast, end: addMinutes(userPreferences.meals.breakfast, 30) },
-            { start: userPreferences.meals.lunch, end: addMinutes(userPreferences.meals.lunch, 30) },
-            { start: userPreferences.meals.dinner, end: addMinutes(userPreferences.meals.dinner, 30) }
-        ];
-        const mealOverlap = mealTimes.some(meal => 
-            checkTimeOverlap(slot.startTime, slot.endTime, meal.start, meal.end)
-        );
-        if (mealOverlap) return true;
+            if (isNearMeal && slot.duration <= 0.5) { // 30 minutes or less
+                userPreferences.regularBlocks.push({
+                    id: Date.now() + Math.random(),
+                    name: 'Free Time',
+                    day: slot.day,
+                    startTime: slot.startTime,
+                    endTime: slot.endTime,
+                    type: 'free'
+                });
+                totalFreeTimeHours += slot.duration;
+                // Remove this slot from available slots
+                const index = availableSlots[timeOfDay].indexOf(slot);
+                if (index > -1) {
+                    availableSlots[timeOfDay].splice(index, 1);
+                }
+            }
+        });
+    });
 
-        // Check routines
-        const routineOverlap = checkTimeOverlap(
-            slot.startTime, slot.endTime,
-            userPreferences.sleepSchedule.wakeTime,
-            userPreferences.sleepSchedule.morningRoutineEnd
-        ) || checkTimeOverlap(
-            slot.startTime, slot.endTime,
-            userPreferences.sleepSchedule.eveningRoutineStart,
-            userPreferences.sleepSchedule.sleepTime
-        );
-        if (routineOverlap) return true;
-
-        return false;
-    }
-
-    // First, allocate free time in non-preferred hours
+    // Then allocate remaining free time in non-preferred hours
     const nonPreferredTimes = Object.keys(availableSlots).filter(time => !preferredHours.includes(time));
     
     nonPreferredTimes.forEach(timeOfDay => {
@@ -1377,10 +1409,6 @@ function scheduleStudyAndFreeTime() {
         
         availableSlots[timeOfDay].forEach(slot => {
             if (totalFreeTimeHours >= minFreeTime * 5) return;
-            if (hasOverlap(slot)) return;
-            
-            const duration = getTimeDuration(slot.startTime, slot.endTime);
-            totalFreeTimeHours += duration;
             
             userPreferences.regularBlocks.push({
                 id: Date.now() + Math.random(),
@@ -1390,14 +1418,15 @@ function scheduleStudyAndFreeTime() {
                 endTime: slot.endTime,
                 type: 'free'
             });
+            totalFreeTimeHours += slot.duration;
         });
     });
 
-    // Then fill ALL remaining slots with study blocks
+    // Finally, fill remaining slots with study blocks
     Object.keys(availableSlots).forEach(timeOfDay => {
         availableSlots[timeOfDay].forEach(slot => {
-            // Skip if slot overlaps with fixed activities
-            if (hasOverlap(slot)) return;
+            // Skip if slot is too short (less than 15 minutes)
+            if (slot.duration < 0.25) return;
 
             // Check if this slot isn't already used for free time
             const isSlotUsed = userPreferences.regularBlocks.some(block => 

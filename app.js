@@ -1422,31 +1422,63 @@ function scheduleStudyAndFreeTime() {
         });
     });
 
-    // Finally, fill remaining slots with study blocks
-    Object.keys(availableSlots).forEach(timeOfDay => {
-        availableSlots[timeOfDay].forEach(slot => {
-            // Skip if slot is too short (less than 15 minutes)
-            if (slot.duration < 0.25) return;
+    // Check if there are any academic tasks before creating study blocks
+    const hasAcademicTasks = tasks.some(task => !task.completed);
 
-            // Check if this slot isn't already used for free time
-            const isSlotUsed = userPreferences.regularBlocks.some(block => 
-                block.day === slot.day && 
-                block.startTime === slot.startTime && 
-                block.endTime === slot.endTime
-            );
+    // Only create study blocks if there are academic tasks
+    if (hasAcademicTasks) {
+        // Fill remaining slots with study blocks
+        Object.keys(availableSlots).forEach(timeOfDay => {
+            availableSlots[timeOfDay].forEach(slot => {
+                // Skip if slot is too short (less than 15 minutes)
+                if (slot.duration < 0.25) return;
 
-            if (!isSlotUsed) {
-                userPreferences.regularBlocks.push({
-                    id: Date.now() + Math.random(),
-                    name: 'Study Block',
-                    day: slot.day,
-                    startTime: slot.startTime,
-                    endTime: slot.endTime,
-                    type: 'study'
-                });
-            }
+                // Check if this slot isn't already used for free time
+                const isSlotUsed = userPreferences.regularBlocks.some(block => 
+                    block.day === slot.day && 
+                    block.startTime === slot.startTime && 
+                    block.endTime === slot.endTime
+                );
+
+                if (!isSlotUsed) {
+                    userPreferences.regularBlocks.push({
+                        id: Date.now() + Math.random(),
+                        name: 'Study Block',
+                        day: slot.day,
+                        startTime: slot.startTime,
+                        endTime: slot.endTime,
+                        type: 'study'
+                    });
+                }
+            });
         });
-    });
+    } else {
+        // If no academic tasks, make all remaining slots free time
+        Object.keys(availableSlots).forEach(timeOfDay => {
+            availableSlots[timeOfDay].forEach(slot => {
+                // Skip if slot is too short (less than 15 minutes)
+                if (slot.duration < 0.25) return;
+
+                // Check if this slot isn't already used
+                const isSlotUsed = userPreferences.regularBlocks.some(block => 
+                    block.day === slot.day && 
+                    block.startTime === slot.startTime && 
+                    block.endTime === slot.endTime
+                );
+
+                if (!isSlotUsed) {
+                    userPreferences.regularBlocks.push({
+                        id: Date.now() + Math.random(),
+                        name: 'Free Time',
+                        day: slot.day,
+                        startTime: slot.startTime,
+                        endTime: slot.endTime,
+                        type: 'free'
+                    });
+                }
+            });
+        });
+    }
 
     console.log('Final blocks:', userPreferences.regularBlocks);
 
